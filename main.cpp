@@ -1,56 +1,7 @@
 #include <iostream>
 #include <assert.h>
-
-namespace TelCoColorCoder
-{
-    enum MajorColor {WHITE, RED, BLACK, YELLOW, VIOLET};
-    enum MinorColor {BLUE, ORANGE, GREEN, BROWN, SLATE};
-
-    const char* MajorColorNames[] = {
-        "White", "Red", "Black", "Yellow", "Violet"
-    };
-    int numberOfMajorColors =
-        sizeof(MajorColorNames) / sizeof(MajorColorNames[0]);
-    const char* MinorColorNames[] = {
-        "Blue", "Orange", "Green", "Brown", "Slate"
-    };
-    int numberOfMinorColors =
-        sizeof(MinorColorNames) / sizeof(MinorColorNames[0]);
-
-    class ColorPair {
-        private:
-            MajorColor majorColor;
-            MinorColor minorColor;
-        public:
-            ColorPair(MajorColor major, MinorColor minor):
-                majorColor(major), minorColor(minor)
-            {}
-            MajorColor getMajor() {
-                return majorColor;
-            }
-            MinorColor getMinor() {
-                return minorColor;
-            }
-            std::string ToString() {
-                std::string colorPairStr = MajorColorNames[majorColor];
-                colorPairStr += " ";
-                colorPairStr += MinorColorNames[minorColor];
-                return colorPairStr;
-            }
-    };
-
-    ColorPair GetColorFromPairNumber(int pairNumber) {
-        int zeroBasedPairNumber = pairNumber - 1;
-        MajorColor majorColor = 
-            (MajorColor)(zeroBasedPairNumber / numberOfMinorColors);
-        MinorColor minorColor =
-            (MinorColor)(zeroBasedPairNumber % numberOfMinorColors);
-        return ColorPair(majorColor, minorColor);
-    }
-    int GetPairNumberFromColor(MajorColor major, MinorColor minor) {
-        return major * numberOfMinorColors + minor + 1;
-    }
-}
+#include "ToneLookup.h"
+#include "ToneLabels.h"
 
 void testNumberToPair(int pairNumber,
     TelCoColorCoder::MajorColor expectedMajor,
@@ -73,12 +24,31 @@ void testPairToNumber(
     assert(pairNumber == expectedPairNumber);
 }
 
-int main() {
-    testNumberToPair(4, TelCoColorCoder::WHITE, TelCoColorCoder::BROWN);
-    testNumberToPair(5, TelCoColorCoder::WHITE, TelCoColorCoder::SLATE);
+extern void PrintReferenceManual();
 
-    testPairToNumber(TelCoColorCoder::BLACK, TelCoColorCoder::ORANGE, 12);
-    testPairToNumber(TelCoColorCoder::VIOLET, TelCoColorCoder::SLATE, 25);
+int main() {
+    TelCoColorCoder::InitializeDefaultEnglishLabels();
+
+    // Test valid and invalid pair numbers
+    try {
+        testNumberToPair(4, TelCoColorCoder::WHITE, TelCoColorCoder::BROWN);
+        testNumberToPair(5, TelCoColorCoder::WHITE, TelCoColorCoder::SLATE);
+        testNumberToPair(26, TelCoColorCoder::RED, TelCoColorCoder::BLUE); // Invalid pair number
+    } catch (const std::out_of_range& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
+    // Test valid and invalid color pair to number conversion
+    try {
+        testPairToNumber(TelCoColorCoder::BLACK, TelCoColorCoder::ORANGE, 12);
+        testPairToNumber(TelCoColorCoder::VIOLET, TelCoColorCoder::SLATE, 25);
+        testPairToNumber(static_cast<TelCoColorCoder::MajorColor>(999), TelCoColorCoder::BLUE, 999); // Invalid major color
+    } catch (const std::out_of_range& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
+    // std::cout << "\nReference Manual:\n";
+    // PrintReferenceManual();
 
     return 0;
 }
